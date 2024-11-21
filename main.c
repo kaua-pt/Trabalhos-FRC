@@ -72,18 +72,6 @@ int create_UDP_Socket(struct sockaddr_in server_addr, char *ip)
         return -1;
     }
 
-    static int timeout = TIMEOUT_MS;
-    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout));
-
-    // REMOVE IT
-    int convert_Ip_Result = inet_pton(AF_INET, ip, &server_addr.sin_addr);
-    if (convert_Ip_Result <= 0)
-    {
-        printf("\n[ERROR] Error at convert IP\n");
-        close(sock);
-        return -1;
-    }
-
     return sock;
 }
 
@@ -121,13 +109,21 @@ char *get_IP(const char *url)
     return ipstr;
 }
 
-struct sockaddr_in configure_Address()
+struct sockaddr_in configure_Address(const char *ip)
 {
     printf("\n[Debug] Setting address to send\n");
     struct sockaddr_in server_addr;
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(NTP_SERVER_PORT); // To bytes
+    server_addr.sin_port = htons(NTP_SERVER_PORT); 
+
+    printf("\n[INFO] My ip: %s\n", ip);
+
+    // POSSIBLE FAIL
+    int convert_Ip_Result = inet_pton(AF_INET, ip, &server_addr.sin_addr);
+    if (convert_Ip_Result <= 0)
+        printf("\n[ERROR] Invalid IP address format\n");
+
     return server_addr;
 }
 
@@ -157,7 +153,7 @@ void transmit_Message(ntp_packet *packet)
 
     char time_str[26];
     strftime(time_str, sizeof(time_str), "%a %b %d %H:%M:%S %Y", tm_info);
-    printf("Data/hora: %s\n", time_str);
+    printf("\nData/hora: %s\n", time_str);
 }
 
 int main(int argc, char *argv[])
@@ -173,10 +169,10 @@ int main(int argc, char *argv[])
 
     // Getting IP address
     char *ip = get_IP(url);
-    printf("\n[Debug] Mapped to %s\n", ip);
-
     if (ip == NULL)
         return 1;
+    printf("\n[Debug] Mapped to %s\n", ip);
+
 
     char attempts = 2;
 
@@ -186,7 +182,8 @@ int main(int argc, char *argv[])
 
         // Setting address and starting socket
         printf("\n[Debug] Starting UDP Socket\n");
-        struct sockaddr_in server_addr = configure_Address();
+        struct sockaddr_in server_addr = configure_Address(ip);
+        
         int sock = create_UDP_Socket(server_addr, ip);
 
         if (sock == -1)
@@ -202,7 +199,7 @@ int main(int argc, char *argv[])
             continue;
         }
 
-        // Receive message with timeout
+         // Receive message with timeout
         fd_set read_fds;
         struct timeval timeout;
         FD_ZERO(&read_fds);
@@ -210,6 +207,7 @@ int main(int argc, char *argv[])
         timeout.tv_sec = 0;
         timeout.tv_usec = TIMEOUT_MS * 1000;
 
+        // recebendo nd
         int select_result = select(sock + 1, &read_fds, NULL, NULL, &timeout);
         if (select_result == -1)
         {
@@ -239,7 +237,11 @@ int main(int argc, char *argv[])
 
         // Without test
         transmit_Message(packet);
+        return 0;
     }
-    printf("Data/hora: não foi possível contactar servidor");
+
+    if(!attempts)
+        printf("\nData/hora: não foi possível contactar servidor\n");
+
     return 0;
 }
