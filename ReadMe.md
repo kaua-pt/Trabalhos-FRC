@@ -6,7 +6,8 @@ O protocolo SNTP é um protocolo de rede, stateless, utilizado para manter reló
 ## Relatório
 ### 1 - Qual sistema operacional foi usado na construção do sistema?  </br>
 
-Para construir o sistema, o grupo utilizou as distro linux ubuntu e debian. Um dos membros do grupo utilizou o wsl para realizar algumas das tarefas propostas.
+Para construir o sistema, o grupo utilizou as distro linux ubuntu e debian. Um dos membros do grupo utilizou o wsl para realizar algumas das tarefas propostas. Outro membro utilizou uma VM para realizar o trabalho.
+
 </br>
 
 ### 2 - Qual ambiente de desenvolvimento foi usado ?</br>
@@ -49,7 +50,7 @@ Exemplo de comando:
 
 ### 5 - Quais são as telas (instruções de uso) ? </br>
 
-Para utilizar o aplicativo, basta apenas roda-lo utilizando a linha de comando como indicado no item anterior. Na sequência, ele irá realizar suas atividades printando apenas o solicitado pelo documento emitido pelo professor.
+Para utilizar o aplicativo, basta apenas builda-lo, passo indicado no item 3 e roda-lo utilizando a linha de comando como indicado no item anterior. Na sequência, ele irá realizar suas atividades printando apenas o solicitado pelo documento emitido pelo professor.
 </br>
 
 ### 6 - Quais são as limitações conhecidas ?
