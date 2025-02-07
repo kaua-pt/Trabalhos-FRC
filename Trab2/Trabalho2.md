@@ -73,7 +73,7 @@ com valor **192.168.133.0/24** . Para isso, deve-se editar o arquivo `/etc/netwo
 E em seguida, aplicamos as alterações deste arquivo com:
 
 ```bash
-sudo ifdown enp2s0 && sudo ifup enp2s0
+sudo ifdown wlp1s0 && sudo ifup wlp1s0
 ```
 
 E assim, verifica-se o efeito do comando com: 
@@ -82,7 +82,7 @@ E assim, verifica-se o efeito do comando com:
 sudo ip addr show
 ```
 
-Que deve indicar que a interface enp2s0 está com o seu estado setado como **UP**. Assim, 
+Que deve indicar que a interface wlp1s0 está com o seu estado setado como **UP**. Assim, 
 enp2s0 está configurado com o IP **192.168.133.2**.
 
 ### 4.2 Interface LAN
@@ -145,8 +145,77 @@ sudo netfilter-persistent reload
 ### 4.4 Serviço DHCP
 
 ## 5. Como validar a rede LAN
-### 5.1 Validações da solução
+### 5.1. Validações da solução
 Para isso, foi realizado uma lista de validação da solução abordando WAN, LAN, NAT e seu devido 
 isolamento.
+Conecta-se uma máquina de teste num switch através da sua interface Ethernet. Executa-se o comando
 
+```bash 
+ipconfig
+```
+
+Na sequência, exibe-se a tabela ARP do sistema com
+
+```bash 
+sudo arp -a
+```
+
+E salva-se as respotas.
+
+#### 5.1.1. Validando conectividade entre LAN e WAN
+Utiliza-se o comando abaixo para observar a tabela de roteamento do kernel.
+
+``` bash 
+sudo netstat -r
+```
+
+#### 5.1.2. Conectividade com o gateway
+Utiliza-se o comando ICMP abaixo para verificar a conectividade com a wan enviando seus pacotes para o gateway.
+
+``` bash
+ping 192.168.133.1
+```
+
+#### 5.1.3. Conectividade entre aparelhos da LAN e equipamentos na saída do gateway
+
+Novatemente, utiliza-se o comando:
+
+``` bash
+ping 192.168.133.200
+```
+
+#### 5.1.3. Conectividade entre aparelhos da LAN e equipamentos na rede externa
+
+Utiliza-se novamente o comando ping, todavia, o firewall da unb acaba bloqueando esse tráfego, para isso, utilizamos o comando:
+
+``` bash
+tracert 192.168.43.39
+```
+
+#### 5.1.4. Validar NAT
+
+Deve-se saber se os dispositivos da LAN conseguiram acessar a internet. Utilizou-se a ferramenta tcpdump para verificar o tráfego.
+Começou-se verificando a tradução de endereços da interface : enp2s0
+
+```bash
+sudo apt-get install tcpdump
+sudo tcpdump -i enp2s0
+```
+
+Deve-se observar os detalhes da mensagem de resposta, verificando os campos de endereço de origem, direção do tráfego e endereço de destino para concluir que de fato o NAT está corretamente.
+
+#### 5.1.5. Isolamento de segmento
+As máquinas LAN não devem acessar outras máquinas da WAN sem passar pelo roteador e também os equipamentos externos não devem conseguir acessar os IPs da rede privada. Inicia-se o teste com o comando:
+
+```bash
+tracert fga.unb.br
+```
+
+Para verificar se um equipamento da WAN não conseguia acessar o IP da rede privada, utilizou-se de um outro computador conectado uma rede 4g e executou-se
+
+```bash
+ping 10.1.0.19
+```
+
+Oque deve resultar em erro.
 ## 6. Limitações conhecidas 
