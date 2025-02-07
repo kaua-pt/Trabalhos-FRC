@@ -218,4 +218,7 @@ ping 10.1.0.19
 ```
 
 Oque deve resultar em erro.
+
 ## 6. Limitações conhecidas 
+
+Dentre as limitações conhecidas, pode-se citar a estrutura da lds. Foi um pouco difícil começar a se situar no laboratório devido a bagunça dos computadores, mas com o tempo conseguimos nos adaptar.
