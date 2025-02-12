@@ -199,6 +199,23 @@ sudo /etc/init.d/isc-dhcp-server start
 
 Deve-se visualizar se o arquivo de leases providas pelo servidor DHCP, disponível em */var/lib/dhcp/dhcpd.leases* concedeu o endereço ip 10.1.0.10 à subrede criada.
 
+### 4.5. Serviço DNAT
+
+#### 4.5.1. Configurar porta TCP
+
+Devemos abrir uma conexão na porta 8080 através do netcat, para isso, utilizaremos:
+
+```bash
+nc -l -p 8080
+```
+
+Na sequência, deve-se testar a conexão através de um dispositivo na WAN, conectando-se no ip publico do roteador através da porta 80. O seguinte comando realizará isso:
+
+```bash
+echo "test" | nc 192.168.133.207 80
+```
+
+Como resultado, o computador localizado na LAN deve receber o *echo* enviado pelo computador localizado na WAN.
 
 ## 5. Como validar a rede LAN
 ### 5.1. Validações da solução
