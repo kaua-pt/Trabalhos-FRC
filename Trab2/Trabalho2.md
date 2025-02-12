@@ -58,9 +58,6 @@ quais as interfaces de redes que estão instaladas no roteador, para isso, utili
 ip a
 ```
 
-No qual, obteve-se a seguinte resposta:
-
-
 Com essas informações, estamos prontos para começar a de fato configurar a rede.
 
 ### 4.1. Interface WAN
@@ -143,6 +140,65 @@ sudo netfilter-persistent reload
 ```
 
 ### 4.4 Serviço DHCP
+
+Após a implementação da NAT, implementa-se o serviço DHCP para prover as configurações de redes para os clientes da LAN recém criada.
+A princípio, deve-se instalar o servidor DHCP com:
+
+```bash
+sudo apt-get update
+sudo apt-get install isc-dhcp-server
+```
+
+Na sequência, deve-se editar o arquivo */etc/dhcp/dhcpd.conf* adicionando as seguintes configurações:
+
+```
+option subnet-mask 255.255.0.0;
+option broadcast-address 10.1.0.255;
+option routers 10.1.0.1;
+option domain-name-servers 192.168.133.1;
+
+subnet 10.1.0.0 netmask 255.255.0.0 {
+    range 10.1.0.10 10.1.0.100;
+}
+```
+Para conferir essa alteração, roda-se o comando:
+
+```bash
+sudo dhcpd -t
+```
+
+Que deve executar sem erros.
+
+#### 4.4.1. Configuração de uma lease estática
+
+Para efeito de testes, fixamos um endereço fixo a uma máquina M que se conecta na LAN criada, para isso, editamos o arquivo */etc/dhcp/dhcpd.conf* da seguinte forma:
+
+```
+host test-machine {
+   hardware ethernet DC:0E:A1:C8:AE:68; 
+   fixed-address 10.1.0.50;
+}
+```
+#### 4.4.2. Definição da Interface para o Servidor DHCP
+
+Edita-se o arquivo */etc/default/isc-dhcp-server*, para que a sua interface *enp2s0* sempre dispare o serviço DHCP:
+
+```
+INTERFACESv4="enp2s0"  
+```
+#### 4.4.3. Reinicialização do serviço DHCP
+
+Segue com os comandos:
+
+```bash
+sudo /etc/init.d/isc-dhcp-server stop
+sudo /etc/init.d/isc-dhcp-server start
+```
+
+#### 4.4.4. Conferência das leases DHCP
+
+Deve-se visualizar se o arquivo de leases providas pelo servidor DHCP, disponível em */var/lib/dhcp/dhcpd.leases* concedeu o endereço ip 10.1.0.10 à subrede criada.
+
 
 ## 5. Como validar a rede LAN
 ### 5.1. Validações da solução
