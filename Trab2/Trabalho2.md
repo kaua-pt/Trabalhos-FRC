@@ -201,21 +201,20 @@ Deve-se visualizar se o arquivo de leases providas pelo servidor DHCP, disponív
 
 ### 4.5. Serviço DNAT
 
-#### 4.5.1. Configurar porta TCP
+#### 4.5.1. Trafego DNAT
 
-Devemos abrir uma conexão na porta 8080 através do netcat, para isso, utilizaremos:
-
-```bash
-nc -l -p 8080
-```
-
-Na sequência, deve-se testar a conexão através de um dispositivo na WAN, conectando-se no ip publico do roteador através da porta 80. O seguinte comando realizará isso:
+A princípio, deve-se criar uma rota para setar o tráfego DNAT, para isso, utiliza-se:
 
 ```bash
-echo "test" | nc 192.168.133.207 80
+iptables -L -v -n -t nat
+iptables -t nat -A PREROUTING -i wlp1s0 -p tcp --dport 80 -j DNAT --to-destination 10.1.0.14:8080
 ```
 
-Como resultado, o computador localizado na LAN deve receber o *echo* enviado pelo computador localizado na WAN.
+Com isso, obtemos como resposta as rotas criadas. Para que haja a comunicação com o DNAT, utiliza-se o comando:
+
+```bash
+sudo nc -l -p 8080
+``` 
 
 ## 5. Como validar a rede LAN
 ### 5.1. Validações da solução
