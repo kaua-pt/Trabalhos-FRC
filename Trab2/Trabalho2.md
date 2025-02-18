@@ -173,7 +173,7 @@ Para efeito de testes, fixamos um endereço fixo a uma máquina M que se conecta
 
 ```
 host test-machine {
-   hardware ethernet DC:0E:A1:C8:AE:68; 
+   hardware ethernet XX:XX:XX:XX:XX:XX; 
    fixed-address 10.1.0.14;
 }
 ```
