@@ -62,8 +62,7 @@ Com essas informações, estamos prontos para começar a de fato configurar a re
 
 ### 4.1. Interface WAN
 
-Deve-se configurar um roteador para que a interface de rede WAN assuma um IP de rede de acesso
-com valor **192.168.133.0/24** . Para isso, deve-se editar o arquivo `/etc/network/interfaces` com os seguintes valores:
+Deve-se inserir no arquivo o nome e senha da rede wifi. Para isso, deve-se editar o arquivo `/etc/network/interfaces` com os seguintes valores:
 
 ![Interfaces](./img/2.jpg)
 
@@ -79,8 +78,7 @@ E assim, verifica-se o efeito do comando com:
 sudo ip addr show
 ```
 
-Que deve indicar que a interface wlp1s0 está com o seu estado setado como **UP**. Assim, 
-enp2s0 está configurado com o IP **192.168.133.2**.
+Que deve indicar que a interface wlp1s0 está com o seu estado setado como **UP**.
 
 ### 4.2 Interface LAN
 
@@ -125,9 +123,9 @@ sudo iptables --flush
 sudo iptables --table nat --flush
 sudo iptables --delete-chain
 sudo iptables --table nat --delete-chain
-sudo iptables -t nat -A POSTROUTING -o eno1 -j MASQUERADE
-sudo iptables -A FORWARD -i enp5s0 -o eno1 -j ACCEPT
-sudo iptables -A FORWARD -i eno1 -o enp5s0 -m state --state RELATED,ESTABLISHED -j ACCEPT
+sudo iptables -t nat -A POSTROUTING -o wlp1s0 -j MASQUERADE
+sudo iptables -A FORWARD -i enp2s0 -o wlp1s0 -j ACCEPT
+sudo iptables -A FORWARD -i wlp1s0 -o enp2s0 -m state --state RELATED,ESTABLISHED -j ACCEPT
 ```
 Com esse processo, os dispositivos presentes na LAN podem acessar a internet através da interface WAN com
 a garantia de que nenhuma regra irá contra seus interesses. Para prosseguir, deve-se salvar essas 
@@ -176,7 +174,7 @@ Para efeito de testes, fixamos um endereço fixo a uma máquina M que se conecta
 ```
 host test-machine {
    hardware ethernet DC:0E:A1:C8:AE:68; 
-   fixed-address 10.1.0.50;
+   fixed-address 10.1.0.14;
 }
 ```
 #### 4.4.2. Definição da Interface para o Servidor DHCP
@@ -203,18 +201,29 @@ Deve-se visualizar se o arquivo de leases providas pelo servidor DHCP, disponív
 
 #### 4.5.1. Trafego DNAT
 
-A princípio, deve-se criar uma rota para setar o tráfego DNAT, para isso, utiliza-se:
+A princípio, deve-se criar uma rota de conexão para setar o tráfego DNAT, para isso, utiliza-se:
 
 ```bash
-iptables -L -v -n -t nat
 iptables -t nat -A PREROUTING -i wlp1s0 -p tcp --dport 80 -j DNAT --to-destination 10.1.0.14:8080
+sudo netfilter-persistent save
+sudo netfilter-persistent reload
+iptables -L -v -n -t nat
 ```
 
-Com isso, obtemos como resposta as rotas criadas. Para que haja a comunicação com o DNAT, utiliza-se o comando:
+Com isso, obtemos como resposta as rotas criadas. Para que haja a comunicação com o DNAT, utiliza-se o comando, tratado neste documento, como receptor:
 
 ```bash
 sudo nc -l -p 8080
 ``` 
+
+Então, deve-se criar o emissor da mensagem utilizando:
+
+```bash
+sudo echo "teste" | nc 192.168.133.155 80
+```
+
+Assim a conexão é criada, possibilitando a troca de mensagens. O receptor receberá a mensagem "
+teste" provinda do emissor.
 
 ## 5. Como validar a rede LAN
 ### 5.1. Validações da solução
@@ -248,23 +257,7 @@ Utiliza-se o comando ICMP abaixo para verificar a conectividade com a wan envian
 ping 192.168.133.1
 ```
 
-#### 5.1.3. Conectividade entre aparelhos da LAN e equipamentos na saída do gateway
-
-Novatemente, utiliza-se o comando:
-
-``` bash
-ping 192.168.133.200
-```
-
-#### 5.1.3. Conectividade entre aparelhos da LAN e equipamentos na rede externa
-
-Utiliza-se novamente o comando ping, todavia, o firewall da unb acaba bloqueando esse tráfego, para isso, utilizamos o comando:
-
-``` bash
-tracert 192.168.43.39
-```
-
-#### 5.1.4. Validar NAT
+#### 5.1.3. Validar NAT
 
 Deve-se saber se os dispositivos da LAN conseguiram acessar a internet. Utilizou-se a ferramenta tcpdump para verificar o tráfego.
 Começou-se verificando a tradução de endereços da interface : enp2s0
@@ -276,17 +269,17 @@ sudo tcpdump -i enp2s0
 
 Deve-se observar os detalhes da mensagem de resposta, verificando os campos de endereço de origem, direção do tráfego e endereço de destino para concluir que de fato o NAT está corretamente.
 
-#### 5.1.5. Isolamento de segmento
+#### 5.1.4. Isolamento de segmento
 As máquinas LAN não devem acessar outras máquinas da WAN sem passar pelo roteador e também os equipamentos externos não devem conseguir acessar os IPs da rede privada. Inicia-se o teste com o comando:
 
 ```bash
 tracert fga.unb.br
 ```
 
-Para verificar se um equipamento da WAN não conseguia acessar o IP da rede privada, utilizou-se de um outro computador conectado uma rede 4g e executou-se
+Para verificar se um equipamento da WAN não conseguia acessar o IP da rede privada, utilizou-se de um outro computador conectado uma rede 4g e executou-se:
 
 ```bash
-ping 10.1.0.19
+ping 10.1.0.14
 ```
 
 Oque deve resultar em erro.
